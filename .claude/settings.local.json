@@ -14,7 +14,9 @@
       "Bash(git remote add:*)",
       "Bash(git remote set-url:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(del \"C:\\Users\\user\\Desktop\\vending\\011225\\backend\\Dockerfile\")",
+      "Bash(del \"C:\\Users\\user\\Desktop\\vending\\011225\\backend\\railway.json\")"
     ],
     "deny": [],
     "ask": []

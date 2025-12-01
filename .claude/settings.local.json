@@ -6,7 +6,11 @@
       "Bash(python:*)",
       "Bash(start vendhub_online.html)",
       "Bash(start deployment_guide.html)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(start https://github.com/new)",
+      "Bash(git pull:*)",
+      "Bash(git init:*)"
     ],
     "deny": [],
     "ask": []

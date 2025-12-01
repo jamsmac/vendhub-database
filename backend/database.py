@@ -52,25 +52,27 @@ def init_db():
 
     Base.metadata.create_all(bind=engine)
 
-    # Создание админа при первом запуске
+    # Создание админа только если его нет
     db = SessionLocal()
     try:
         from models import User
 
-        # Удаляем всех существующих пользователей
-        db.query(User).delete()
-        db.commit()
+        # Проверяем, есть ли админ
+        admin = db.query(User).filter(User.username == "jamshiddin").first()
 
-        # Создаем админа
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        admin_user = User(
-            username="jamshiddin",
-            email="admin@vendhub.com",
-            password_hash=pwd_context.hash("311941990")
-        )
-        db.add(admin_user)
-        db.commit()
-        print("Admin user 'jamshiddin' created successfully")
+        if not admin:
+            # Создаем админа
+            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+            admin_user = User(
+                username="jamshiddin",
+                email="admin@vendhub.com",
+                password_hash=pwd_context.hash("311941990")
+            )
+            db.add(admin_user)
+            db.commit()
+            print("Admin user 'jamshiddin' created successfully")
+        else:
+            print("Admin user already exists")
     except Exception as e:
         print(f"Admin creation error: {e}")
         db.rollback()

@@ -466,6 +466,39 @@ async def health_check():
     }
 
 
+@app.get("/api/admin/reset-db")
+async def reset_database(secret: str = Query(...), db: Session = Depends(get_db)):
+    """Одноразовая очистка БД и создание админа (удалить после использования)"""
+    if secret != "vendhub-reset-2024":
+        raise HTTPException(status_code=403, detail="Invalid secret")
+
+    from passlib.context import CryptContext
+
+    try:
+        # Удаляем все записи, файлы и пользователей
+        db.query(Record).delete()
+        db.query(File).delete()
+        db.query(User).delete()
+        db.commit()
+
+        # Создаем админа
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        admin_user = User(
+            username="jamshiddin",
+            email="admin@vendhub.com",
+            password_hash=pwd_context.hash("311941990")
+        )
+        db.add(admin_user)
+        db.commit()
+
+        logger.info("Database reset completed. Admin user created.")
+        return {"status": "success", "message": "Database cleared. Admin user 'jamshiddin' created."}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Reset error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Запуск приложения
 if __name__ == "__main__":
     import uvicorn

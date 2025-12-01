@@ -472,7 +472,7 @@ async def reset_database(secret: str = Query(...), db: Session = Depends(get_db)
     if secret != "vendhub-reset-2024":
         raise HTTPException(status_code=403, detail="Invalid secret")
 
-    from passlib.context import CryptContext
+    import bcrypt
 
     try:
         # Удаляем все записи, файлы и пользователей
@@ -482,11 +482,12 @@ async def reset_database(secret: str = Query(...), db: Session = Depends(get_db)
         db.commit()
 
         # Создаем админа
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        password = "311941990"
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         admin_user = User(
             username="jamshiddin",
             email="admin@vendhub.com",
-            password_hash=pwd_context.hash("311941990")
+            password_hash=password_hash
         )
         db.add(admin_user)
         db.commit()

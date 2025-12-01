@@ -36,16 +36,29 @@ app = FastAPI(
 )
 
 # CORS middleware
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "*")
+if allowed_origins_str == "*" or not allowed_origins_str:
+    allowed_origins = ["*"]
+else:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Логирование
-logger.add("logs/vendhub_{time}.log", rotation="1 day", retention="7 days")
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+logger.add(
+    f"{log_dir}/vendhub_{{time}}.log",
+    rotation="1 day",
+    retention="7 days",
+    level=os.getenv("LOG_LEVEL", "INFO")
+)
 
 
 # Pydantic схемы

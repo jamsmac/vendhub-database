@@ -8,13 +8,20 @@ from sqlalchemy.pool import QueuePool
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Загружаем .env только если файл существует (для локальной разработки)
+if os.path.exists(".env"):
+    load_dotenv()
 
 # Database URL из переменных окружения
+# Railway автоматически предоставляет DATABASE_URL
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:postgres@localhost:5432/vendhub"
 )
+
+# Исправление DATABASE_URL для Railway (если используется postgres:// вместо postgresql://)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Создание engine с пулом соединений
 engine = create_engine(

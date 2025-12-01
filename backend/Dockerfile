@@ -13,16 +13,17 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копирование кода приложения
-COPY backend/ ./backend/
+COPY . .
 
 # Создание директории для логов
-RUN mkdir -p backend/logs && chmod 777 backend/logs
+RUN mkdir -p logs && chmod 777 logs
 
-# Порт (Railway автоматически устанавливает PORT)
+# Порт
 EXPOSE 8000
 
 # Переменная окружения для порта
 ENV PORT=8000
 
-# Запуск приложения (Railway устанавливает PORT автоматически)
-CMD ["sh", "-c", "cd backend && python -m uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Запуск приложения
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+

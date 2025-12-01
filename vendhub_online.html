@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendHub Database - Online</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: white;
+            --border-color: #e2e8f0;
+            --hover-bg: #f1f5f9;
+        }
+
+        body.dark-theme {
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --hover-bg: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Authentication Screen */
+        .auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        .auth-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            opacity: 0.7;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-color);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        /* App Header */
+        .app-header {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-email {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .btn-secondary {
+            background: var(--hover-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-link {
+            background: none;
+            color: var(--primary-color);
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 60px;
+            height: 30px;
+            background: var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .theme-toggle.active {
+            background: var(--primary-color);
+        }
+
+        .theme-toggle::after {
+            content: '☀️';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .theme-toggle.active::after {
+            content: '🌙';
+            transform: translateX(30px);
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            border-color: var(--secondary-color);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtitle {
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Files List */
+        .files-list {
+            margin-top: 24px;
+        }
+
+        .files-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .files-list-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .file-card {
+            background: var(--hover-bg);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .file-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-delete {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: var(--error-color);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .file-card:hover .file-delete {
+            opacity: 1;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        /* Database Section */
+        .database-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+
+        .database-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .database-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .database-stats {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Filters */
+        .filters-section {
+            padding: 20px 24px;
+            background: var(--hover-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filters-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        /* Table */
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        thead {
+            background: var(--hover-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 14px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--hover-bg);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--hover-bg);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--hover-bg);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: var(--hover-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            animation: slideInRight 0.3s;
+            z-index: 3000;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .toast.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .toast.error {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">V</div>
+            <h1 class="auth-title">VendHub Database</h1>
+            <p class="auth-subtitle">Онлайн система управления данными</p>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')">Вход</button>
+                <button class="auth-tab" onclick="switchAuthTab('register')">Регистрация</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Логин</label>
+                    <input type="text" class="form-input" id="loginUsername" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" class="form-input" id="loginPassword" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    🔐 Войти
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">Логин</label>
+                    <input type="text" class="form-input" id="regUsername" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email (необязательно)</label>
+                    <input type="email" class="form-input" id="regEmail" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" class="form-input" id="regPassword" required autocomplete="new-password" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    📝 Зарегистрироваться
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="container hidden">
+        <!-- App Header -->
+        <div class="app-header">
+            <div class="app-title">
+                <div class="brand-logo">V</div>
+                <span>VendHub Database</span>
+            </div>
+            <div class="user-info">
+                <span class="user-email" id="userEmail"></span>
+                <button class="btn btn-secondary btn-small" onclick="handleLogout()">
+                    🚪 Выйти
+                </button>
+                <div class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"></div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-title">Загрузите файлы Excel</div>
+                <div class="upload-subtitle">Перетащите файлы сюда или нажмите кнопку</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    📎 Выбрать файлы
+                </button>
+            </div>
+
+            <!-- Files List -->
+            <div class="files-list hidden" id="filesList">
+                <div class="files-list-header">
+                    <h3 class="files-list-title">📂 Загруженные файлы</h3>
+                    <span id="filesCount">0 файлов</span>
+                </div>
+                <div class="files-grid" id="filesGrid"></div>
+            </div>
+        </div>
+
+        <!-- Database Section -->
+        <div class="database-section hidden" id="databaseSection">
+            <div class="database-header">
+                <div>
+                    <h3 class="database-title">🗃️ База данных</h3>
+                    <div class="database-stats">
+                        Всего записей: <span id="totalRecords">0</span> |
+                        Показано: <span id="visibleRecords">0</span>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="exportDatabase()">
+                    📥 Экспорт Excel
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-grid">
+                    <div class="filter-group full-width">
+                        <label class="filter-label">🔍 Поиск</label>
+                        <input type="text" class="filter-input" id="dbSearch"
+                               placeholder="Поиск по всем полям...">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📅 Период (месяц)</label>
+                        <select class="filter-select" id="dbPeriodFilter">
+                            <option value="">Все периоды</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📆 Дата с</label>
+                        <input type="date" class="filter-input" id="dbDateFrom">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📆 Дата по</label>
+                        <input type="date" class="filter-input" id="dbDateTo">
+                    </div>
+                </div>
+                <div class="filters-actions">
+                    <button class="btn btn-secondary btn-small" onclick="resetFilters()">
+                        🔄 Сбросить фильтры
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-scroll">
+                <table>
+                    <thead id="dbTableHead"></thead>
+                    <tbody id="dbTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <div class="pagination-info">
+                    Показано <span id="showFrom">0</span>-<span id="showTo">0</span> из <span id="showTotal">0</span>
+                </div>
+                <div class="pagination-controls">
+                    <select class="page-select" id="pageSizeSelect" onchange="changePageSize()">
+                        <option value="50">50 на странице</option>
+                        <option value="100">100 на странице</option>
+                        <option value="250">250 на странице</option>
+                        <option value="500">500 на странице</option>
+                    </select>
+                    <button class="pagination-btn" onclick="goToPage(1)">«</button>
+                    <button class="pagination-btn" onclick="prevPage()">‹</button>
+                    <span id="pageNumbers"></span>
+                    <button class="pagination-btn" onclick="nextPage()">›</button>
+                    <button class="pagination-btn" onclick="goToPage(totalPages)">»</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-title">Нет данных</div>
+            <div class="empty-state-text">Загрузите файлы Excel для начала работы</div>
+        </div>
+    </div>
+
+    <!-- Modal for File View -->
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalFileName">Файл</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-scroll" style="flex: 1;">
+                    <table>
+                        <thead id="modalTableHead"></thead>
+                        <tbody id="modalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✔</span>
+        <span id="toastMessage">Сообщение</span>
+    </div>
+
+    <script>
+        // ========================================
+        // Configuration
+        // ========================================
+
+        // ⚙️ НАСТРОЙКА API URL
+        // Для локального тестирования используйте:
+        const API_URL = 'http://localhost:8000';
+
+        // После деплоя на Railway замените на ваш Railway URL:
+        // const API_URL = 'https://your-app-name.up.railway.app';
+        //
+        // Пример:
+        // const API_URL = 'https://vendhub-database-production.up.railway.app';
+        let currentUser = null;
+        let authToken = null;
+
+        // App State
+        let appData = {
+            files: [],
+            records: [],
+            stats: null,
+            pagination: {
+                page: 1,
+                pageSize: 50,
+                total: 0,
+                pages: 1
+            },
+            filters: {
+                search: '',
+                period: '',
+                dateFrom: '',
+                dateTo: ''
+            }
+        };
+
+        let totalPages = 1;
+
+        // ========================================
+        // Initialization
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // Check for saved token
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+
+            if (savedToken && savedUser) {
+                authToken = savedToken;
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+                loadData();
+            } else {
+                showAuthScreen();
+            }
+
+            // Load theme
+            const darkTheme = localStorage.getItem('darkTheme') === 'true';
+            if (darkTheme) {
+                document.body.classList.add('dark-theme');
+                const toggle = document.querySelector('.theme-toggle');
+                if (toggle) toggle.classList.add('active');
+            }
+
+            setupEventHandlers();
+        }
+
+        function setupEventHandlers() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('uploadArea');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+
+                // Drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    handleFiles(e.dataTransfer.files);
+                });
+            }
+
+            // Filters with debounce
+            let searchTimeout;
+            const dbSearch = document.getElementById('dbSearch');
+            if (dbSearch) {
+                dbSearch.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        appData.filters.search = dbSearch.value;
+                        appData.pagination.page = 1;
+                        loadRecords();
+                    }, 300);
+                });
+            }
+
+            const periodFilter = document.getElementById('dbPeriodFilter');
+            if (periodFilter) {
+                periodFilter.addEventListener('change', () => {
+                    appData.filters.period = periodFilter.value;
+                    appData.pagination.page = 1;
+                    loadRecords();
+                });
+            }
+
+            const dateFrom = document.getElementById('dbDateFrom');
+            if (dateFrom) {
+                dateFrom.addEventListener('change', () => {
+                    appData.filters.dateFrom = dateFrom.value;
+                    appData.pagination.page = 1;
+                    loadRecords();
+                });
+            }
+
+            const dateTo = document.getElementById('dbDateTo');
+            if (dateTo) {
+                dateTo.addEventListener('change', () => {
+                    appData.filters.dateTo = dateTo.value;
+                    appData.pagination.page = 1;
+                    loadRecords();
+                });
+            }
+
+            // Close modal on Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        }
+
+        // ========================================
+        // Authentication
+        // ========================================
+
+        function switchAuthTab(tab) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            const forms = document.querySelectorAll('.auth-form');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            forms.forEach(f => f.classList.remove('active'));
+
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                forms[0].classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                forms[1].classList.add('active');
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '⏳ Вход...';
+
+            try {
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка входа');
+                }
+
+                const data = await response.json();
+                authToken = data.access_token;
+                currentUser = { username };
+
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                showToast('Вы успешно вошли!', 'success');
+                showMainApp();
+                loadData();
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast(error.message, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '🔐 Войти';
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '⏳ Регистрация...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        email: email || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка регистрации');
+                }
+
+                showToast('Регистрация успешна! Войдите в систему', 'success');
+                switchAuthTab('login');
+                document.getElementById('loginUsername').value = username;
+
+            } catch (error) {
+                console.error('Register error:', error);
+                showToast(error.message, 'error');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '📝 Зарегистрироваться';
+            }
+        }
+
+        function handleLogout() {
+            if (!confirm('Выйти из системы?')) return;
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            authToken = null;
+            currentUser = null;
+
+            showAuthScreen();
+            showToast('Вы вышли из системы', 'success');
+        }
+
+        function showAuthScreen() {
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        function showMainApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            if (currentUser) {
+                document.getElementById('userEmail').textContent = currentUser.username;
+            }
+        }
+
+        // ========================================
+        // API Calls
+        // ========================================
+
+        async function apiCall(endpoint, options = {}) {
+            const defaultHeaders = {
+                'Authorization': `Bearer ${authToken}`
+            };
+
+            if (options.body && !(options.body instanceof FormData)) {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+
+            const config = {
+                ...options,
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, config);
+
+                if (response.status === 401) {
+                    handleLogout();
+                    throw new Error('Требуется авторизация');
+                }
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка запроса');
+                }
+
+                return response;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        async function loadData() {
+            try {
+                await Promise.all([
+                    loadFiles(),
+                    loadStats(),
+                    loadRecords()
+                ]);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showToast('Ошибка загрузки данных', 'error');
+            }
+        }
+
+        async function loadFiles() {
+            try {
+                const response = await apiCall('/api/files');
+                const files = await response.json();
+                appData.files = files;
+                renderFilesList();
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await apiCall('/api/records/stats');
+                const stats = await response.json();
+                appData.stats = stats;
+                updateStats();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadRecords() {
+            try {
+                const params = new URLSearchParams({
+                    page: appData.pagination.page,
+                    size: appData.pagination.pageSize
+                });
+
+                if (appData.filters.search) params.append('search', appData.filters.search);
+                if (appData.filters.period) params.append('period', appData.filters.period);
+                if (appData.filters.dateFrom) params.append('date_from', appData.filters.dateFrom);
+                if (appData.filters.dateTo) params.append('date_to', appData.filters.dateTo);
+
+                const response = await apiCall(`/api/records?${params}`);
+                const data = await response.json();
+
+                appData.records = data.data || [];
+                appData.pagination.total = data.total || 0;
+                appData.pagination.pages = data.pages || 1;
+                totalPages = data.pages || 1;
+
+                renderDatabase();
+            } catch (error) {
+                console.error('Error loading records:', error);
+                showToast('Ошибка загрузки записей', 'error');
+            }
+        }
+
+        // ========================================
+        // File Upload
+        // ========================================
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+            e.target.value = '';
+        }
+
+        async function handleFiles(fileList) {
+            const files = Array.from(fileList).filter(f => /\.(xlsx|xls)$/i.test(f.name));
+
+            if (files.length === 0) {
+                showToast('Выберите файлы Excel (.xlsx, .xls)', 'error');
+                return;
+            }
+
+            showLoading(true, 'Загрузка файлов...');
+
+            for (const file of files) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    await apiCall('/api/files/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    showToast(`Файл ${file.name} загружен`, 'success');
+                } catch (error) {
+                    console.error(`Error uploading ${file.name}:`, error);
+                    showToast(`Ошибка: ${file.name}`, 'error');
+                }
+            }
+
+            showLoading(false);
+            await loadData();
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Удалить файл?')) return;
+
+            try {
+                await apiCall(`/api/files/${fileId}`, {
+                    method: 'DELETE'
+                });
+
+                showToast('Файл удален', 'success');
+                await loadData();
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                showToast('Ошибка удаления файла', 'error');
+            }
+        }
+
+        // ========================================
+        // Rendering
+        // ========================================
+
+        function renderFilesList() {
+            const filesList = document.getElementById('filesList');
+            const filesGrid = document.getElementById('filesGrid');
+            const filesCount = document.getElementById('filesCount');
+
+            if (appData.files.length === 0) {
+                filesList.classList.add('hidden');
+                return;
+            }
+
+            filesList.classList.remove('hidden');
+            filesCount.textContent = `${appData.files.length} файл(ов)`;
+
+            filesGrid.innerHTML = appData.files.map(file => `
+                <div class="file-card" onclick="openFileModal(${file.id})">
+                    <div class="file-card-header">
+                        <div class="file-icon">📄</div>
+                        <div class="file-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
+                        <button class="file-delete" onclick="event.stopPropagation(); deleteFile(${file.id})" title="Удалить">×</button>
+                    </div>
+                    <div class="file-meta">
+                        <span>📊 ${file.row_count} записей</span>
+                        <span>📅 ${new Date(file.uploaded_at).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            if (!appData.stats) return;
+
+            const totalRecords = document.getElementById('totalRecords');
+            if (totalRecords) {
+                totalRecords.textContent = appData.stats.total_records.toLocaleString();
+            }
+
+            // Update period filter
+            const periodFilter = document.getElementById('dbPeriodFilter');
+            if (periodFilter && appData.stats.periods) {
+                const currentValue = periodFilter.value;
+                periodFilter.innerHTML = '<option value="">Все периоды</option>';
+
+                appData.stats.periods.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.period;
+                    option.textContent = p.label;
+                    periodFilter.appendChild(option);
+                });
+
+                periodFilter.value = currentValue;
+            }
+        }
+
+        function renderDatabase() {
+            const emptyState = document.getElementById('emptyState');
+            const databaseSection = document.getElementById('databaseSection');
+
+            if (appData.pagination.total === 0) {
+                emptyState.classList.remove('hidden');
+                databaseSection.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            databaseSection.classList.remove('hidden');
+
+            // Render table headers
+            if (appData.records.length > 0) {
+                const firstRecord = appData.records[0].data;
+                const headers = Object.keys(firstRecord);
+                renderTableHeaders(headers);
+                renderTableBody(appData.records, headers);
+            }
+
+            // Update pagination
+            const visibleRecords = document.getElementById('visibleRecords');
+            const showFrom = document.getElementById('showFrom');
+            const showTo = document.getElementById('showTo');
+            const showTotal = document.getElementById('showTotal');
+
+            if (visibleRecords) visibleRecords.textContent = appData.pagination.total.toLocaleString();
+
+            const start = (appData.pagination.page - 1) * appData.pagination.pageSize + 1;
+            const end = Math.min(start + appData.records.length - 1, appData.pagination.total);
+
+            if (showFrom) showFrom.textContent = appData.pagination.total > 0 ? start : 0;
+            if (showTo) showTo.textContent = end;
+            if (showTotal) showTotal.textContent = appData.pagination.total.toLocaleString();
+
+            renderPageNumbers();
+        }
+
+        function renderTableHeaders(headers) {
+            const thead = document.getElementById('dbTableHead');
+            if (!thead) return;
+
+            thead.innerHTML = `
+                <tr>
+                    <th class="text-center">#</th>
+                    ${headers.map(h => `<th title="${escapeHtml(h)}">${escapeHtml(truncate(h, 20))}</th>`).join('')}
+                </tr>
+            `;
+        }
+
+        function renderTableBody(records, headers) {
+            const tbody = document.getElementById('dbTableBody');
+            if (!tbody) return;
+
+            if (records.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="100" style="text-align: center; padding: 40px;">
+                            Нет данных для отображения
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const start = (appData.pagination.page - 1) * appData.pagination.pageSize;
+
+            tbody.innerHTML = records.map((record, index) => `
+                <tr>
+                    <td class="text-center">${start + index + 1}</td>
+                    ${headers.map(h => {
+                        const value = record.data[h] || '';
+                        return `<td title="${escapeHtml(String(value))}">${escapeHtml(truncate(String(value), 30))}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        function renderPageNumbers() {
+            const container = document.getElementById('pageNumbers');
+            if (!container) return;
+
+            const currentPage = appData.pagination.page;
+            const total = totalPages;
+            let html = '';
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(total, startPage + maxButtons - 1);
+
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}"
+                                onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ========================================
+        // Pagination
+        // ========================================
+
+        function goToPage(page) {
+            appData.pagination.page = Math.max(1, Math.min(page, totalPages));
+            loadRecords();
+        }
+
+        function prevPage() {
+            goToPage(appData.pagination.page - 1);
+        }
+
+        function nextPage() {
+            goToPage(appData.pagination.page + 1);
+        }
+
+        function changePageSize() {
+            appData.pagination.pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            appData.pagination.page = 1;
+            loadRecords();
+        }
+
+        function resetFilters() {
+            document.getElementById('dbSearch').value = '';
+            document.getElementById('dbPeriodFilter').value = '';
+            document.getElementById('dbDateFrom').value = '';
+            document.getElementById('dbDateTo').value = '';
+
+            appData.filters = {
+                search: '',
+                period: '',
+                dateFrom: '',
+                dateTo: ''
+            };
+            appData.pagination.page = 1;
+
+            loadRecords();
+            showToast('Фильтры сброшены', 'success');
+        }
+
+        // ========================================
+        // Modal
+        // ========================================
+
+        async function openFileModal(fileId) {
+            const file = appData.files.find(f => f.id === fileId);
+            if (!file) return;
+
+            document.getElementById('modalFileName').textContent = file.filename;
+
+            // Render headers
+            const headers = file.headers || [];
+            const modalHead = document.getElementById('modalTableHead');
+            if (modalHead) {
+                modalHead.innerHTML = `
+                    <tr>
+                        <th class="text-center">#</th>
+                        ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
+                    </tr>
+                `;
+            }
+
+            // Fetch file records
+            try {
+                const params = new URLSearchParams({
+                    file_id: fileId,
+                    page: 1,
+                    size: 1000
+                });
+
+                const response = await apiCall(`/api/records?${params}`);
+                const data = await response.json();
+
+                const modalBody = document.getElementById('modalTableBody');
+                if (modalBody && data.data) {
+                    modalBody.innerHTML = data.data.map((record, index) => `
+                        <tr>
+                            <td class="text-center">${index + 1}</td>
+                            ${headers.map(h => {
+                                const value = record.data[h] || '';
+                                return `<td title="${escapeHtml(String(value))}">${escapeHtml(String(value))}</td>`;
+                            }).join('')}
+                        </tr>
+                    `).join('');
+                }
+
+                document.getElementById('fileModal').classList.add('active');
+            } catch (error) {
+                console.error('Error loading file records:', error);
+                showToast('Ошибка загрузки данных файла', 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('fileModal').classList.remove('active');
+        }
+
+        // ========================================
+        // Export
+        // ========================================
+
+        async function exportDatabase() {
+            try {
+                showLoading(true, 'Экспорт данных...');
+
+                const params = new URLSearchParams();
+                if (appData.filters.search) params.append('search', appData.filters.search);
+                if (appData.filters.period) params.append('period', appData.filters.period);
+                if (appData.filters.dateFrom) params.append('date_from', appData.filters.dateFrom);
+                if (appData.filters.dateTo) params.append('date_to', appData.filters.dateTo);
+
+                const response = await apiCall(`/api/records/export?${params}`);
+                const blob = await response.blob();
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `VendHub_Database_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showToast('Экспорт выполнен успешно', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Ошибка экспорта', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ========================================
+        // Utilities
+        // ========================================
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const toggle = document.querySelector('.theme-toggle');
+            if (toggle) toggle.classList.toggle('active');
+            localStorage.setItem('darkTheme', document.body.classList.contains('dark-theme'));
+        }
+
+        function showLoading(show, text = 'Загрузка...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+
+            if (show) {
+                overlay.classList.add('active');
+                if (loadingText) loadingText.textContent = text;
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            toast.className = `toast ${type}`;
+            icon.textContent = type === 'success' ? '✔' : type === 'error' ? '✕' : '⚠';
+            msg.textContent = message;
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function truncate(str, length) {
+            return str.length > length ? str.substring(0, length) + '...' : str;
+        }
+    </script>
+</body>
+</html>

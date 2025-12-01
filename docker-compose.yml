@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: vendhub_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vendhub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vendhub_backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vendhub
+      JWT_SECRET_KEY: development-secret-key-change-in-production
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend (простой HTTP сервер)
+  frontend:
+    image: nginx:alpine
+    container_name: vendhub_frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
+  backend_logs:
+    driver: local

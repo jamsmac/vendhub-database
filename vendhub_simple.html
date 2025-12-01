@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendHub Database</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: white;
+            --border-color: #e2e8f0;
+            --hover-bg: #f1f5f9;
+        }
+
+        body.dark-theme {
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --hover-bg: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Шапка */
+        .app-header {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        /* Кнопки */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .btn-secondary {
+            background: var(--hover-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Переключатель темы */
+        .theme-toggle {
+            width: 60px;
+            height: 30px;
+            background: var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .theme-toggle.active {
+            background: var(--primary-color);
+        }
+
+        .theme-toggle::after {
+            content: '☀️';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .theme-toggle.active::after {
+            content: '🌙';
+            transform: translateX(30px);
+        }
+
+        /* Зона загрузки */
+        .upload-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            border-color: var(--secondary-color);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtitle {
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Список файлов */
+        .files-list {
+            margin-top: 24px;
+        }
+
+        .files-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .files-list-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .file-card {
+            background: var(--hover-bg);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .file-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .file-name {
+            font-weight: 600;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-delete {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: var(--error-color);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .file-card:hover .file-delete {
+            opacity: 1;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        /* Секция базы данных */
+        .database-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+        }
+
+        .database-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .database-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .database-stats {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Фильтры */
+        .filters-section {
+            padding: 20px 24px;
+            background: var(--hover-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filters-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        /* Группировка по месяцам */
+        .period-groups {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s;
+        }
+
+        .period-groups.expanded {
+            max-height: 2000px;
+        }
+
+        .period-group {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .period-group-header {
+            padding: 16px 24px;
+            background: var(--hover-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .period-group-header:hover {
+            background: var(--border-color);
+        }
+
+        .period-group-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .period-group-toggle {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .period-group.expanded .period-group-toggle {
+            transform: rotate(180deg);
+        }
+
+        .period-group-content {
+            display: none;
+        }
+
+        .period-group.expanded .period-group-content {
+            display: block;
+        }
+
+        /* Таблица */
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        thead {
+            background: var(--hover-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 14px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        th.sorted-asc::after {
+            content: ' ▲';
+            font-size: 10px;
+        }
+
+        th.sorted-desc::after {
+            content: ' ▼';
+            font-size: 10px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--hover-bg);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Пагинация */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            background: var(--hover-bg);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--hover-bg);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: var(--hover-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Пустое состояние */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Toast уведомления */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 20px;
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            animation: slideInRight 0.3s;
+            z-index: 3000;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .toast.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .toast.error {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .toast.warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        /* Индикатор загрузки */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .loading-progress {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Скроллбар */
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: var(--hover-bg);
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .app-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                max-width: 100%;
+                max-height: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="app-header">
+            <div class="app-title">
+                <div class="brand-logo">V</div>
+                <span>VendHub Database</span>
+            </div>
+            <div class="app-controls">
+                <button class="btn btn-danger btn-small hidden" id="clearAllBtn" onclick="clearAllData()">
+                    🗑️ Очистить все
+                </button>
+                <div class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"></div>
+            </div>
+        </div>
+
+        <!-- Секция загрузки -->
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-title">Загрузите файлы Excel</div>
+                <div class="upload-subtitle">Перетащите файлы сюда или нажмите кнопку</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    📎 Выбрать файлы
+                </button>
+            </div>
+
+            <!-- Список загруженных файлов -->
+            <div class="files-list hidden" id="filesList">
+                <div class="files-list-header">
+                    <h3 class="files-list-title">📂 Загруженные файлы</h3>
+                    <span id="filesCount">0 файлов</span>
+                </div>
+                <div class="files-grid" id="filesGrid"></div>
+            </div>
+        </div>
+
+        <!-- База данных -->
+        <div class="database-section hidden" id="databaseSection">
+            <div class="database-header">
+                <div>
+                    <h3 class="database-title">🗃️ База данных</h3>
+                    <div class="database-stats">
+                        Всего записей: <span id="totalRecords">0</span> |
+                        Уникальных: <span id="uniqueRecords">0</span> |
+                        Показано: <span id="visibleRecords">0</span>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="exportDatabase()">
+                    📥 Экспорт Excel
+                </button>
+            </div>
+
+            <!-- Фильтры -->
+            <div class="filters-section">
+                <div class="filters-grid">
+                    <div class="filter-group full-width">
+                        <label class="filter-label">🔍 Поиск</label>
+                        <input type="text" class="filter-input" id="dbSearch"
+                               placeholder="Поиск по всем полям...">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📅 Период (месяц)</label>
+                        <select class="filter-select" id="dbPeriodFilter">
+                            <option value="">Все периоды</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📆 Дата с</label>
+                        <input type="date" class="filter-input" id="dbDateFrom">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">📆 Дата по</label>
+                        <input type="date" class="filter-input" id="dbDateTo">
+                    </div>
+                </div>
+                <div class="filters-actions">
+                    <button class="btn btn-secondary btn-small" onclick="togglePeriodGroups()">
+                        📊 <span id="groupToggleText">Показать группировку по месяцам</span>
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="resetFilters()">
+                        🔄 Сбросить фильтры
+                    </button>
+                </div>
+            </div>
+
+            <!-- Группировка по месяцам -->
+            <div class="period-groups" id="periodGroups"></div>
+
+            <!-- Таблица -->
+            <div class="table-scroll">
+                <table>
+                    <thead id="dbTableHead"></thead>
+                    <tbody id="dbTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Пагинация -->
+            <div class="pagination">
+                <div class="pagination-info">
+                    Показано <span id="showFrom">0</span>-<span id="showTo">0</span> из <span id="showTotal">0</span>
+                </div>
+                <div class="pagination-controls">
+                    <select class="page-select" id="pageSizeSelect" onchange="changePageSize()">
+                        <option value="50">50 на странице</option>
+                        <option value="100">100 на странице</option>
+                        <option value="250">250 на странице</option>
+                        <option value="500">500 на странице</option>
+                    </select>
+                    <button class="pagination-btn" onclick="goToPage(1)">«</button>
+                    <button class="pagination-btn" onclick="prevPage()">‹</button>
+                    <span id="pageNumbers"></span>
+                    <button class="pagination-btn" onclick="nextPage()">›</button>
+                    <button class="pagination-btn" onclick="goToPage(totalPages)">»</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Пустое состояние -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">📭</div>
+            <div class="empty-state-title">Нет данных</div>
+            <div class="empty-state-text">Загрузите файлы Excel для начала работы</div>
+        </div>
+    </div>
+
+    <!-- Модальное окно просмотра файла -->
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalFileName">Файл</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="filters-section">
+                    <div class="filter-group full-width">
+                        <label class="filter-label">🔍 Поиск</label>
+                        <input type="text" class="filter-input" id="modalSearch"
+                               placeholder="Поиск по таблице...">
+                    </div>
+                </div>
+                <div class="table-scroll" style="flex: 1;">
+                    <table>
+                        <thead id="modalTableHead"></thead>
+                        <tbody id="modalTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Показано <span id="modalShowFrom">0</span>-<span id="modalShowTo">0</span> из <span id="modalShowTotal">0</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <select class="page-select" id="modalPageSize" onchange="changeModalPageSize()">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="250">250</option>
+                        </select>
+                        <button class="pagination-btn" onclick="modalGoToPage(1)">«</button>
+                        <button class="pagination-btn" onclick="modalPrevPage()">‹</button>
+                        <span id="modalPageNumbers"></span>
+                        <button class="pagination-btn" onclick="modalNextPage()">›</button>
+                        <button class="pagination-btn" onclick="modalGoToPage(modalTotalPages)">»</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Загрузка...</div>
+            <div class="loading-progress" id="loadingProgress">0%</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✔</span>
+        <span id="toastMessage">Сообщение</span>
+    </div>
+
+    <script>
+        // ========================================
+        // Глобальные данные
+        // ========================================
+
+        let appData = {
+            files: [],
+            database: [],
+            headers: [],
+            filteredData: [],
+            periods: new Set(),
+            pagination: {
+                page: 1,
+                pageSize: 50,
+                totalPages: 1
+            },
+            sort: {
+                column: null,
+                direction: 'asc'
+            }
+        };
+
+        let modalData = {
+            fileIndex: null,
+            headers: [],
+            data: [],
+            filteredData: [],
+            pagination: {
+                page: 1,
+                pageSize: 50,
+                totalPages: 1
+            },
+            sort: {
+                column: null,
+                direction: 'asc'
+            }
+        };
+
+        let totalPages = 1;
+        let modalTotalPages = 1;
+        let periodGroupsExpanded = false;
+
+        // ========================================
+        // Инициализация
+        // ========================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // Загрузка темы
+            const darkTheme = localStorage.getItem('darkTheme') === 'true';
+            if (darkTheme) {
+                document.body.classList.add('dark-theme');
+                document.querySelector('.theme-toggle').classList.add('active');
+            }
+
+            // Загрузка сохраненных данных
+            loadSavedData();
+
+            // События
+            setupEventHandlers();
+        }
+
+        function setupEventHandlers() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('uploadArea');
+
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // Фильтры с debounce
+            let searchTimeout;
+            document.getElementById('dbSearch').addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 300);
+            });
+
+            document.getElementById('dbPeriodFilter').addEventListener('change', applyFilters);
+            document.getElementById('dbDateFrom').addEventListener('change', applyFilters);
+            document.getElementById('dbDateTo').addEventListener('change', applyFilters);
+
+            // Поиск в модальном окне
+            document.getElementById('modalSearch').addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyModalFilters, 300);
+            });
+
+            // Закрытие модального окна по Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        }
+
+        // ========================================
+        // Обработка файлов
+        // ========================================
+
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+            e.target.value = '';
+        }
+
+        async function handleFiles(fileList) {
+            const files = Array.from(fileList).filter(f => /\.(xlsx|xls)$/i.test(f.name));
+
+            if (files.length === 0) {
+                showToast('Выберите файлы Excel (.xlsx, .xls)', 'error');
+                return;
+            }
+
+            showLoading(true, 'Обработка файлов...');
+
+            let successCount = 0;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                updateLoading(`Обработка: ${file.name}`, Math.round((i / files.length) * 100));
+
+                try {
+                    const data = await readExcelFile(file);
+
+                    if (data.length < 2) {
+                        showToast(`Файл ${file.name} пуст`, 'warning');
+                        continue;
+                    }
+
+                    const fileInfo = {
+                        name: file.name,
+                        date: new Date().toISOString(),
+                        headers: data[0],
+                        data: data.slice(1),
+                        rowCount: data.length - 1
+                    };
+
+                    const existingIndex = appData.files.findIndex(f => f.name === file.name);
+                    if (existingIndex >= 0) {
+                        appData.files[existingIndex] = fileInfo;
+                    } else {
+                        appData.files.push(fileInfo);
+                    }
+
+                    successCount++;
+                } catch (error) {
+                    console.error(`Ошибка обработки ${file.name}:`, error);
+                    showToast(`Ошибка: ${file.name}`, 'error');
+                }
+            }
+
+            updateLoading('Объединение данных...', 90);
+            mergeDatabase();
+            renderFilesList();
+            renderDatabase();
+            saveData();
+
+            showLoading(false);
+            showToast(`Загружено файлов: ${successCount} из ${files.length}`, 'success');
+        }
+
+        function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(sheet, {
+                            header: 1,
+                            defval: '',
+                            blankrows: false
+                        });
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // ========================================
+        // Объединение базы данных
+        // ========================================
+
+        function mergeDatabase() {
+            if (appData.files.length === 0) {
+                appData.database = [];
+                appData.headers = [];
+                appData.periods.clear();
+                return;
+            }
+
+            appData.headers = appData.files[0].headers;
+
+            const allData = [];
+            const uniqueKeys = new Set();
+
+            appData.files.forEach(file => {
+                file.data.forEach(row => {
+                    const key = JSON.stringify(row);
+
+                    if (!uniqueKeys.has(key)) {
+                        uniqueKeys.add(key);
+
+                        const rowObj = {
+                            _raw: row,
+                            _source: file.name
+                        };
+
+                        const dateInfo = extractDate(row);
+                        if (dateInfo) {
+                            rowObj._date = dateInfo.date;
+                            rowObj._period = dateInfo.period;
+                            appData.periods.add(dateInfo.period);
+                        }
+
+                        allData.push(rowObj);
+                    }
+                });
+            });
+
+            appData.database = allData;
+            appData.filteredData = [...allData];
+
+            updatePeriodFilter();
+        }
+
+        function extractDate(row) {
+            for (let i = 0; i < row.length; i++) {
+                const value = String(row[i]).trim();
+                const date = parseDate(value);
+                if (date) {
+                    const period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    return { date, period };
+                }
+            }
+            return null;
+        }
+
+        function parseDate(str) {
+            if (!str || typeof str !== 'string') return null;
+
+            const formats = [
+                /(\d{4})-(\d{1,2})-(\d{1,2})/,
+                /(\d{1,2})\.(\d{1,2})\.(\d{4})/,
+                /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
+            ];
+
+            for (let i = 0; i < formats.length; i++) {
+                const match = str.match(formats[i]);
+                if (match) {
+                    let year, month, day;
+
+                    if (i === 0) {
+                        year = parseInt(match[1]);
+                        month = parseInt(match[2]) - 1;
+                        day = parseInt(match[3]);
+                    } else if (i === 1) {
+                        day = parseInt(match[1]);
+                        month = parseInt(match[2]) - 1;
+                        year = parseInt(match[3]);
+                    } else {
+                        month = parseInt(match[1]) - 1;
+                        day = parseInt(match[2]);
+                        year = parseInt(match[3]);
+                    }
+
+                    if (year >= 2000 && year <= 2100 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+                        return new Date(year, month, day);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function updatePeriodFilter() {
+            const select = document.getElementById('dbPeriodFilter');
+            const periods = Array.from(appData.periods).sort().reverse();
+
+            select.innerHTML = '<option value="">Все периоды</option>';
+
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                               'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+            periods.forEach(period => {
+                const [year, month] = period.split('-');
+                const label = `${monthNames[parseInt(month) - 1]} ${year}`;
+                const option = document.createElement('option');
+                option.value = period;
+                option.textContent = label;
+                select.appendChild(option);
+            });
+        }
+
+        // ========================================
+        // Рендеринг UI
+        // ========================================
+
+        function renderFilesList() {
+            const filesList = document.getElementById('filesList');
+            const filesGrid = document.getElementById('filesGrid');
+            const filesCount = document.getElementById('filesCount');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+
+            if (appData.files.length === 0) {
+                filesList.classList.add('hidden');
+                clearAllBtn.classList.add('hidden');
+                return;
+            }
+
+            filesList.classList.remove('hidden');
+            clearAllBtn.classList.remove('hidden');
+            filesCount.textContent = `${appData.files.length} файл(ов)`;
+
+            filesGrid.innerHTML = appData.files.map((file, index) => `
+                <div class="file-card" onclick="openFileModal(${index})">
+                    <div class="file-card-header">
+                        <div class="file-icon">📄</div>
+                        <div class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+                        <button class="file-delete" onclick="event.stopPropagation(); deleteFile(${index})" title="Удалить">×</button>
+                    </div>
+                    <div class="file-meta">
+                        <span>📊 ${file.rowCount.toLocaleString()} записей</span>
+                        <span>📅 ${new Date(file.date).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderDatabase() {
+            const emptyState = document.getElementById('emptyState');
+            const databaseSection = document.getElementById('databaseSection');
+
+            if (appData.database.length === 0) {
+                emptyState.classList.remove('hidden');
+                databaseSection.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            databaseSection.classList.remove('hidden');
+
+            document.getElementById('totalRecords').textContent =
+                appData.files.reduce((sum, f) => sum + f.rowCount, 0).toLocaleString();
+            document.getElementById('uniqueRecords').textContent =
+                appData.database.length.toLocaleString();
+
+            renderTableHeaders('dbTableHead', appData.headers, sortTable);
+
+            applyFilters();
+        }
+
+        function renderTableHeaders(containerId, headers, sortCallback) {
+            const thead = document.getElementById(containerId);
+            const callbackName = sortCallback === sortTable ? 'sortTable' : 'sortModalTable';
+
+            thead.innerHTML = `
+                <tr>
+                    <th onclick="${callbackName}(0)" class="text-center">#</th>
+                    ${headers.map((h, i) => `
+                        <th onclick="${callbackName}(${i + 1})" title="${escapeHtml(h)}">${escapeHtml(truncate(h, 20))}</th>
+                    `).join('')}
+                </tr>
+            `;
+        }
+
+        function renderTableBody(containerId, data, startIndex = 0) {
+            const tbody = document.getElementById(containerId);
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="100" style="text-align: center; padding: 40px;">
+                            Нет данных для отображения
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.map((row, index) => `
+                <tr>
+                    <td class="text-center">${startIndex + index + 1}</td>
+                    ${row._raw.map(cell => `
+                        <td title="${escapeHtml(String(cell))}">${escapeHtml(truncate(String(cell), 30))}</td>
+                    `).join('')}
+                </tr>
+            `).join('');
+        }
+
+        // ========================================
+        // Фильтрация и сортировка
+        // ========================================
+
+        function applyFilters() {
+            const search = document.getElementById('dbSearch').value.toLowerCase().trim();
+            const period = document.getElementById('dbPeriodFilter').value;
+            const dateFrom = document.getElementById('dbDateFrom').value;
+            const dateTo = document.getElementById('dbDateTo').value;
+
+            let filtered = appData.database;
+
+            if (search) {
+                filtered = filtered.filter(row =>
+                    row._raw.some(cell => String(cell).toLowerCase().includes(search))
+                );
+            }
+
+            if (period) {
+                filtered = filtered.filter(row => row._period === period);
+            }
+
+            if (dateFrom) {
+                const from = new Date(dateFrom);
+                filtered = filtered.filter(row => row._date && row._date >= from);
+            }
+
+            if (dateTo) {
+                const to = new Date(dateTo);
+                filtered = filtered.filter(row => row._date && row._date <= to);
+            }
+
+            appData.filteredData = filtered;
+            appData.pagination.page = 1;
+
+            renderPaginatedData();
+            renderPeriodGroups();
+        }
+
+        function resetFilters() {
+            document.getElementById('dbSearch').value = '';
+            document.getElementById('dbPeriodFilter').value = '';
+            document.getElementById('dbDateFrom').value = '';
+            document.getElementById('dbDateTo').value = '';
+
+            applyFilters();
+            showToast('Фильтры сброшены', 'success');
+        }
+
+        function sortTable(columnIndex) {
+            const sort = appData.sort;
+
+            if (sort.column === columnIndex) {
+                sort.direction = sort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sort.column = columnIndex;
+                sort.direction = 'asc';
+            }
+
+            appData.filteredData.sort((a, b) => {
+                if (columnIndex === 0) return 0;
+
+                let aVal = a._raw[columnIndex - 1];
+                let bVal = b._raw[columnIndex - 1];
+
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return sort.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+
+                if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            document.querySelectorAll('#dbTableHead th').forEach((th, i) => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (i === columnIndex) {
+                    th.classList.add(sort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+
+            renderPaginatedData();
+        }
+
+        // ========================================
+        // Пагинация базы данных
+        // ========================================
+
+        function renderPaginatedData() {
+            const { page, pageSize } = appData.pagination;
+            const data = appData.filteredData;
+
+            totalPages = Math.ceil(data.length / pageSize) || 1;
+            appData.pagination.totalPages = totalPages;
+
+            const start = (page - 1) * pageSize;
+            const end = Math.min(start + pageSize, data.length);
+            const pageData = data.slice(start, end);
+
+            renderTableBody('dbTableBody', pageData, start);
+
+            document.getElementById('visibleRecords').textContent = data.length.toLocaleString();
+            document.getElementById('showFrom').textContent = data.length > 0 ? start + 1 : 0;
+            document.getElementById('showTo').textContent = end;
+            document.getElementById('showTotal').textContent = data.length.toLocaleString();
+
+            renderPageNumbers('pageNumbers', page, totalPages, 'goToPage');
+        }
+
+        function renderPageNumbers(containerId, currentPage, total, callbackName) {
+            const container = document.getElementById(containerId);
+            let html = '';
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(total, startPage + maxButtons - 1);
+
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}"
+                                onclick="${callbackName}(${i})">${i}</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            appData.pagination.page = Math.max(1, Math.min(page, totalPages));
+            renderPaginatedData();
+        }
+
+        function prevPage() {
+            goToPage(appData.pagination.page - 1);
+        }
+
+        function nextPage() {
+            goToPage(appData.pagination.page + 1);
+        }
+
+        function changePageSize() {
+            appData.pagination.pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            appData.pagination.page = 1;
+            renderPaginatedData();
+        }
+
+        // ========================================
+        // Группировка по периодам
+        // ========================================
+
+        function togglePeriodGroups() {
+            periodGroupsExpanded = !periodGroupsExpanded;
+            const container = document.getElementById('periodGroups');
+            const text = document.getElementById('groupToggleText');
+
+            if (periodGroupsExpanded) {
+                container.classList.add('expanded');
+                text.textContent = 'Скрыть группировку по месяцам';
+            } else {
+                container.classList.remove('expanded');
+                text.textContent = 'Показать группировку по месяцам';
+            }
+        }
+
+        function renderPeriodGroups() {
+            const container = document.getElementById('periodGroups');
+
+            const groups = {};
+            appData.filteredData.forEach(row => {
+                const period = row._period || 'Без даты';
+                if (!groups[period]) {
+                    groups[period] = [];
+                }
+                groups[period].push(row);
+            });
+
+            const sortedPeriods = Object.keys(groups).sort().reverse();
+
+            if (sortedPeriods.length <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                               'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+            container.innerHTML = sortedPeriods.map((period, index) => {
+                let label = period;
+                if (period !== 'Без даты') {
+                    const [year, month] = period.split('-');
+                    label = `${monthNames[parseInt(month) - 1]} ${year}`;
+                }
+
+                return `
+                    <div class="period-group" id="period_${index}">
+                        <div class="period-group-header" onclick="togglePeriodGroup(${index})">
+                            <span class="period-group-title">${label}</span>
+                            <span style="opacity: 0.7;">📊 ${groups[period].length.toLocaleString()} записей</span>
+                            <button class="period-group-toggle">▼</button>
+                        </div>
+                        <div class="period-group-content">
+                            <div class="table-scroll" style="max-height: 400px;">
+                                <table>
+                                    <thead>${document.getElementById('dbTableHead').innerHTML}</thead>
+                                    <tbody id="period_body_${index}"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Заполняем данные для каждой группы
+            sortedPeriods.forEach((period, index) => {
+                const tbody = document.getElementById(`period_body_${index}`);
+                if (tbody) {
+                    tbody.innerHTML = groups[period].map((row, rowIndex) => `
+                        <tr>
+                            <td class="text-center">${rowIndex + 1}</td>
+                            ${row._raw.map(cell => `
+                                <td title="${escapeHtml(String(cell))}">${escapeHtml(truncate(String(cell), 30))}</td>
+                            `).join('')}
+                        </tr>
+                    `).join('');
+                }
+            });
+        }
+
+        function togglePeriodGroup(index) {
+            const group = document.getElementById(`period_${index}`);
+            group.classList.toggle('expanded');
+        }
+
+        // ========================================
+        // Модальное окно
+        // ========================================
+
+        function openFileModal(fileIndex) {
+            const file = appData.files[fileIndex];
+            if (!file) return;
+
+            modalData.fileIndex = fileIndex;
+            modalData.headers = file.headers;
+            modalData.data = file.data.map(row => ({ _raw: row }));
+            modalData.filteredData = [...modalData.data];
+            modalData.pagination.page = 1;
+
+            document.getElementById('modalFileName').textContent = file.name;
+            document.getElementById('modalSearch').value = '';
+
+            renderTableHeaders('modalTableHead', file.headers, sortModalTable);
+            renderModalPaginatedData();
+
+            document.getElementById('fileModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('fileModal').classList.remove('active');
+        }
+
+        function applyModalFilters() {
+            const search = document.getElementById('modalSearch').value.toLowerCase().trim();
+
+            if (search) {
+                modalData.filteredData = modalData.data.filter(row =>
+                    row._raw.some(cell => String(cell).toLowerCase().includes(search))
+                );
+            } else {
+                modalData.filteredData = [...modalData.data];
+            }
+
+            modalData.pagination.page = 1;
+            renderModalPaginatedData();
+        }
+
+        function sortModalTable(columnIndex) {
+            const sort = modalData.sort;
+
+            if (sort.column === columnIndex) {
+                sort.direction = sort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sort.column = columnIndex;
+                sort.direction = 'asc';
+            }
+
+            modalData.filteredData.sort((a, b) => {
+                if (columnIndex === 0) return 0;
+
+                let aVal = a._raw[columnIndex - 1];
+                let bVal = b._raw[columnIndex - 1];
+
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return sort.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+
+                if (aVal < bVal) return sort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            document.querySelectorAll('#modalTableHead th').forEach((th, i) => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+                if (i === columnIndex) {
+                    th.classList.add(sort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+
+            renderModalPaginatedData();
+        }
+
+        function renderModalPaginatedData() {
+            const { page, pageSize } = modalData.pagination;
+            const data = modalData.filteredData;
+
+            modalTotalPages = Math.ceil(data.length / pageSize) || 1;
+            modalData.pagination.totalPages = modalTotalPages;
+
+            const start = (page - 1) * pageSize;
+            const end = Math.min(start + pageSize, data.length);
+            const pageData = data.slice(start, end);
+
+            renderTableBody('modalTableBody', pageData, start);
+
+            document.getElementById('modalShowFrom').textContent = data.length > 0 ? start + 1 : 0;
+            document.getElementById('modalShowTo').textContent = end;
+            document.getElementById('modalShowTotal').textContent = data.length.toLocaleString();
+
+            renderPageNumbers('modalPageNumbers', page, modalTotalPages, 'modalGoToPage');
+        }
+
+        function modalGoToPage(page) {
+            modalData.pagination.page = Math.max(1, Math.min(page, modalTotalPages));
+            renderModalPaginatedData();
+        }
+
+        function modalPrevPage() {
+            modalGoToPage(modalData.pagination.page - 1);
+        }
+
+        function modalNextPage() {
+            modalGoToPage(modalData.pagination.page + 1);
+        }
+
+        function changeModalPageSize() {
+            modalData.pagination.pageSize = parseInt(document.getElementById('modalPageSize').value);
+            modalData.pagination.page = 1;
+            renderModalPaginatedData();
+        }
+
+        // ========================================
+        // Экспорт
+        // ========================================
+
+        function exportDatabase() {
+            if (appData.filteredData.length === 0) {
+                showToast('Нет данных для экспорта', 'error');
+                return;
+            }
+
+            showLoading(true, 'Экспорт данных...');
+
+            try {
+                const exportData = [
+                    appData.headers,
+                    ...appData.filteredData.map(row => row._raw)
+                ];
+
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'База данных');
+
+                const fileName = `VendHub_Database_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast(`Экспортировано ${appData.filteredData.length} записей`, 'success');
+            } catch (error) {
+                console.error('Ошибка экспорта:', error);
+                showToast('Ошибка экспорта', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ========================================
+        // Управление данными
+        // ========================================
+
+        function deleteFile(index) {
+            if (!confirm(`Удалить файл "${appData.files[index].name}"?`)) return;
+
+            appData.files.splice(index, 1);
+            mergeDatabase();
+            renderFilesList();
+            renderDatabase();
+            saveData();
+
+            showToast('Файл удален', 'success');
+        }
+
+        function clearAllData() {
+            if (!confirm('Удалить все загруженные данные?')) return;
+
+            appData.files = [];
+            appData.database = [];
+            appData.filteredData = [];
+            appData.headers = [];
+            appData.periods.clear();
+
+            localStorage.removeItem('vendhubData');
+
+            renderFilesList();
+            renderDatabase();
+
+            showToast('Все данные удалены', 'success');
+        }
+
+        function saveData() {
+            try {
+                const dataToSave = {
+                    files: appData.files,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('vendhubData', JSON.stringify(dataToSave));
+            } catch (e) {
+                console.warn('Ошибка сохранения:', e);
+            }
+        }
+
+        function loadSavedData() {
+            try {
+                const saved = localStorage.getItem('vendhubData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    appData.files = data.files || [];
+
+                    if (appData.files.length > 0) {
+                        mergeDatabase();
+                        renderFilesList();
+                        renderDatabase();
+                        showToast('Данные восстановлены из сохранения', 'success');
+                    }
+                }
+            } catch (e) {
+                console.warn('Ошибка загрузки:', e);
+            }
+        }
+
+        // ========================================
+        // Утилиты
+        // ========================================
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            document.querySelector('.theme-toggle').classList.toggle('active');
+            localStorage.setItem('darkTheme', document.body.classList.contains('dark-theme'));
+        }
+
+        function showLoading(show, text = 'Загрузка...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+
+            if (show) {
+                overlay.classList.add('active');
+                loadingText.textContent = text;
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        function updateLoading(text, percent) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingProgress').textContent = `${percent}%`;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            toast.className = `toast ${type}`;
+            icon.textContent = type === 'success' ? '✔' : type === 'error' ? '✕' : '⚠';
+            msg.textContent = message;
+
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function truncate(str, length) {
+            return str.length > length ? str.substring(0, length) + '...' : str;
+        }
+    </script>
+</body>
+</html>

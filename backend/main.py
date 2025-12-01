@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from typing import List, Optional
 from datetime import datetime, timedelta, date
 from pydantic import BaseModel
@@ -105,8 +105,28 @@ class DatabaseStats(BaseModel):
 async def startup_event():
     """Инициализация при запуске"""
     logger.info("Starting VendHub Database API...")
-    init_db()
-    logger.info("Database initialized successfully")
+    
+    # Проверка DATABASE_URL
+    db_url = os.getenv("DATABASE_URL", "NOT SET")
+    if db_url == "NOT SET":
+        logger.error("DATABASE_URL environment variable is not set!")
+        logger.error("Please set DATABASE_URL in Railway variables")
+    else:
+        # Скрываем пароль в логах
+        safe_url = db_url.split("@")[-1] if "@" in db_url else "***"
+        logger.info(f"Database URL configured: postgresql://***@{safe_url}")
+    
+    try:
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {str(e)}")
+        logger.error("Please check:")
+        logger.error("1. DATABASE_URL is set correctly in Railway")
+        logger.error("2. PostgreSQL service is running in Railway")
+        logger.error("3. Database credentials are correct")
+        # Не останавливаем приложение, но логируем ошибку
+        raise
 
 
 @app.on_event("shutdown")
@@ -477,6 +497,25 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0"
     }
+
+
+@app.get("/health/db")
+async def health_check_db(db: Session = Depends(get_db)):
+    """Проверка состояния базы данных"""
+    try:
+        # Простой запрос для проверки подключения
+        result = db.execute(text("SELECT 1")).scalar()
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Database health check failed: {str(e)}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database connection failed: {str(e)}"
+        )
 
 
 @app.get("/api/admin/reset-db")

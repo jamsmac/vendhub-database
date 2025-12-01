@@ -48,4 +48,31 @@ def init_db():
     """
     Инициализация базы данных (создание таблиц)
     """
+    from passlib.context import CryptContext
+
     Base.metadata.create_all(bind=engine)
+
+    # Создание админа при первом запуске
+    db = SessionLocal()
+    try:
+        from models import User
+
+        # Удаляем всех существующих пользователей
+        db.query(User).delete()
+        db.commit()
+
+        # Создаем админа
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        admin_user = User(
+            username="jamshiddin",
+            email="admin@vendhub.com",
+            password_hash=pwd_context.hash("311941990")
+        )
+        db.add(admin_user)
+        db.commit()
+        print("Admin user 'jamshiddin' created successfully")
+    except Exception as e:
+        print(f"Admin creation error: {e}")
+        db.rollback()
+    finally:
+        db.close()

@@ -10,7 +10,11 @@
       "Bash(git commit:*)",
       "Bash(start https://github.com/new)",
       "Bash(git pull:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

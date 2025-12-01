@@ -55,8 +55,8 @@
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/yourusername/vendhub.git
-cd vendhub/011225
+git clone https://github.com/jamsmac/vendhub-database.git
+cd vendhub-database
 
 # 2. Запустить все сервисы
 docker-compose up -d
@@ -302,7 +302,7 @@ pytest --cov=. tests/
 
 ## 🐛 Сообщить об ошибке
 
-Нашли баг? [Создайте issue](https://github.com/yourusername/vendhub/issues)
+Нашли баг? [Создайте issue](https://github.com/jamsmac/vendhub-database/issues)
 
 ## 📝 TODO / Roadmap
 
@@ -345,8 +345,8 @@ MIT License - см. [LICENSE](./LICENSE)
 Нужна помощь?
 
 - 📖 [Документация](./DEPLOYMENT.md)
-- 💬 [Discussions](https://github.com/yourusername/vendhub/discussions)
-- 🐛 [Issues](https://github.com/yourusername/vendhub/issues)
+- 💬 [Discussions](https://github.com/jamsmac/vendhub-database/discussions)
+- 🐛 [Issues](https://github.com/jamsmac/vendhub-database/issues)
 - 📧 [Email](mailto:support@vendhub.com)
 
 ---
